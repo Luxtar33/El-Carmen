@@ -1,60 +1,62 @@
-const sql = require("mssql");
-const express = require("express");
-const bodyParser = require("body-parser");
-const crypto = require("crypto");
+    const sql = require("mssql");
+    const express = require("express");
+    const bodyParser = require("body-parser");
 
-const app = express();
-app.use(bodyParser.json());
+    const app = express();
+    app.use(bodyParser.json());
 
-const config = {
-    server: "DESKTOP-E2UV8CP",  // SOLO el nombre del servidor, sin "\MSSQLSERVER22"
-    database: "prueba",
-    options: {
-        encrypt: false,
-        trustServerCertificate: true
-    },
-    authentication: {
-        type: "ntlm", // Autenticación de Windows
+    // Configuración de conexión a SQL Server
+    const config = {
+        server: "DESKTOP-E2UV8CP",
+        database: "prueba",
+        user: "censo",
+        password: "12345",
         options: {
-            domain: "",   // Déjalo vacío si estás en una PC local
-            userName: "", // Déjalo vacío para autenticación integrada
-            password: ""  // Déjalo vacío para autenticación integrada
+            encrypt: false,
+            trustServerCertificate: true,
+            port: 1433 // Agrega esta línea si el puerto es diferente
         }
     }
-};
+    
 
-// Conectar a la base de datos
-sql.connect(config)
-    .then(() => console.log("✅ Conexión exitosa a SQL Server"))
-    .catch(err => console.error("❌ Error de conexión:", err));
+    // Función para conectar a la base de datos
+    async function connectDB() {
+        try {
+            await sql.connect(config);
+            console.log("✅ Conexión exitosa a SQL Server");
+        } catch (err) {
+            console.error("❌ Error de conexión a SQL Server:", err);
+        }
+    }
 
-// Ruta para manejar el inicio de sesión
-app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
+    connectDB(); // Conectar al iniciar el servidor
 
-    try {
-        const request = new sql.Request();
-        request.input("username", sql.NVarChar, username);
-        const result = await request.query("SELECT password_hash FROM Usuarios WHERE username = @username");
+    // Ruta para manejar el inicio de sesión
+    app.post("/login", async (req, res) => {
+        const { username, password } = req.body;
 
-        if (result.recordset.length > 0) {
-            const storedHash = result.recordset[0].password_hash;
-            const inputHash = crypto.createHash("sha256").update(password).digest("hex").toUpperCase();
+        try {
+            const pool = await sql.connect(config);
+            const request = pool.request();
+            request.input("username", sql.NVarChar, username);
+            request.input("password", sql.NVarChar, password);
+            
+            // Consulta sin hash (directa)
+            const result = await request.query("SELECT * FROM Usuarios WHERE username = @username AND password = @password");
 
-            if (storedHash.toUpperCase() === inputHash) {
-                return res.json({ success: true, message: "Inicio de sesión exitoso" });
+            if (result.recordset.length > 0) {
+                return res.json({ success: true, message: "✅ Inicio de sesión exitoso" });
             }
+
+            res.json({ success: false, message: "❌ Usuario o contraseña incorrectos" });
+        } catch (err) {
+            console.error("❌ Error en la consulta:", err);
+            res.status(500).json({ success: false, message: "❌ Error en el servidor" });
         }
+    });
 
-        res.json({ success: false, message: "Usuario o contraseña incorrectos" });
-    } catch (err) {
-        console.error("Error en la consulta:", err);
-        res.status(500).json({ success: false, message: "Error en el servidor" });
-    }
-});
-
-// Iniciar el servidor
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});
+    // Iniciar el servidor en el puerto 3000
+    const PORT = 4000;
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    });

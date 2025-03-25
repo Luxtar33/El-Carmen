@@ -1,11 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Inicio de Sesión</title>
 </head>
 <body>
-    <h1>HOLA Piero jhgjhgjhg</h1>
+    <h2>Inicio de Sesión</h2>
+    <input type="text" id="username" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+    <p id="message"></p>
+
+    <script>
+        function login() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            const messageElement = document.getElementById("message");
+
+            fetch("http://localhost:4000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Para depuración
+                if (data.success) {
+                    messageElement.textContent = "✅ Conexión exitosa";
+                    messageElement.style.color = "green";
+                } else {
+                    messageElement.textContent = "❌ Usuario o contraseña incorrectos";
+                    messageElement.style.color = "red";
+                }
+            })
+            .catch(error => {
+                console.error("Error en la solicitud:", error);
+                messageElement.textContent = "❌ Error de conexión con el servidor";
+                messageElement.style.color = "red";
+            });
+        }
+    </script>
 </body>
 </html>
