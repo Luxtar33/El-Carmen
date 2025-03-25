@@ -2,5 +2,32 @@
   "dependencies": {
     "express": "^4.21.2",
     "mssql": "^11.0.1"
-  }
+  },
+  "name": "el-carmen",
+  "version": "1.0.0",
+  "description": "Censo",
+  "main": "server.js",
+  "devDependencies": {
+    "morgan": "^1.10.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luxtar33/El-Carmen.git"
+  },
+  "keywords": [
+    "node",
+    "npm",
+    "javasript",
+    "carmen"
+  ],
+  "author": "Joseph",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Luxtar33/El-Carmen/issues"
+  },
+  "homepage": "https://github.com/Luxtar33/El-Carmen#readme"
 }
